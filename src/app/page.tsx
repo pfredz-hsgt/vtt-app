@@ -37,9 +37,11 @@ export default async function Home({
   const { data: expenses } = await query
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Dashboard</h1>
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row gap-3 sm:gap-0 sm:items-center sm:justify-between">
+        <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+          Dashboard
+        </h1>
         <AddExpenseDialog />
       </div>
       <ExpenseList expenses={expenses || []} currentFilter={type} />
