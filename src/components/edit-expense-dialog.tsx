@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { Plus } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Trash2 } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import {
     Dialog,
@@ -10,7 +10,6 @@ import {
     DialogFooter,
     DialogHeader,
     DialogTitle,
-    DialogTrigger,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -22,52 +21,79 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 import { DatePicker } from "@/components/date-picker"
-import { addExpense } from '@/app/actions'
+import { updateExpense, deleteExpense } from '@/app/actions'
+import { useRouter } from 'next/navigation'
 
-interface AddExpenseDialogProps {
-    open?: boolean
-    onOpenChange?: (open: boolean) => void
+interface EditExpenseDialogProps {
+    expense: {
+        id: string
+        type: string
+        odometer: number
+        cost: number
+        notes: string
+        created_at: string
+    } | null
+    open: boolean
+    onOpenChange: (open: boolean) => void
 }
 
-export function AddExpenseDialog({ open: controlledOpen, onOpenChange }: AddExpenseDialogProps = {}) {
-    const [internalOpen, setInternalOpen] = useState(false)
+export function EditExpenseDialog({ expense, open, onOpenChange }: EditExpenseDialogProps) {
+    const router = useRouter()
     const [date, setDate] = useState<Date | undefined>(new Date())
+    const [type, setType] = useState<string>('')
 
-    const open = controlledOpen !== undefined ? controlledOpen : internalOpen
-    const setOpen = onOpenChange || setInternalOpen
+    useEffect(() => {
+        if (expense) {
+            setDate(new Date(expense.created_at))
+            setType(expense.type)
+        }
+    }, [expense])
 
     async function handleSubmit(formData: FormData) {
+        if (!expense) return
+
         if (date) {
             formData.append('expense_date', date.toISOString())
         }
-        const result = await addExpense(formData)
+        const result = await updateExpense(expense.id, formData)
         if (result?.error) {
             alert(result.error)
         } else {
-            setOpen(false)
-            setDate(new Date())
+            onOpenChange(false)
+            router.refresh()
         }
     }
 
+    async function handleDelete() {
+        if (!expense) return
+
+        if (!confirm('Are you sure you want to delete this expense?')) {
+            return
+        }
+
+        const result = await deleteExpense(expense.id)
+        if (result?.error) {
+            alert(result.error)
+        } else {
+            onOpenChange(false)
+            router.refresh()
+        }
+    }
+
+    if (!expense) return null
+
     return (
-        <Dialog open={open} onOpenChange={setOpen}>
-            {!controlledOpen && (
-                <DialogTrigger asChild>
-                    <Button className="gap-2">
-                        <Plus className="h-4 w-4" /> Add Expense
-                    </Button>
-                </DialogTrigger>
-            )}
+        <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>
-                    <DialogTitle>Add Expense</DialogTitle>
+                    <DialogTitle>Edit Expense</DialogTitle>
                     <DialogDescription>
-                        Record a new vehicle expense here.
+                        Update your vehicle expense details.
                     </DialogDescription>
                 </DialogHeader>
                 <form action={handleSubmit} className="grid gap-4 py-4">
                     <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="date" className="text-right">
+                        <Label htmlFor="edit-date" className="text-right">
                             Date
                         </Label>
                         <div className="col-span-3">
@@ -75,10 +101,10 @@ export function AddExpenseDialog({ open: controlledOpen, onOpenChange }: AddExpe
                         </div>
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="type" className="text-right">
+                        <Label htmlFor="edit-type" className="text-right">
                             Type
                         </Label>
-                        <Select name="type" required>
+                        <Select name="type" value={type} onValueChange={setType} required>
                             <SelectTrigger className="col-span-3">
                                 <SelectValue placeholder="Select type" />
                             </SelectTrigger>
@@ -92,41 +118,53 @@ export function AddExpenseDialog({ open: controlledOpen, onOpenChange }: AddExpe
                         </Select>
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="odometer" className="text-right">
+                        <Label htmlFor="edit-odometer" className="text-right">
                             Odometer
                         </Label>
                         <Input
-                            id="odometer"
+                            id="edit-odometer"
                             name="odometer"
                             type="number"
+                            defaultValue={expense.odometer}
                             className="col-span-3"
                             required
                         />
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="cost" className="text-right">
+                        <Label htmlFor="edit-cost" className="text-right">
                             Cost
                         </Label>
                         <Input
-                            id="cost"
+                            id="edit-cost"
                             name="cost"
                             type="number"
                             step="0.01"
+                            defaultValue={expense.cost}
                             className="col-span-3"
                             required
                         />
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="notes" className="text-right">
+                        <Label htmlFor="edit-notes" className="text-right">
                             Notes
                         </Label>
                         <Input
-                            id="notes"
+                            id="edit-notes"
                             name="notes"
+                            defaultValue={expense.notes || ''}
                             className="col-span-3"
                         />
                     </div>
-                    <DialogFooter>
+                    <DialogFooter className="gap-2">
+                        <Button
+                            type="button"
+                            variant="destructive"
+                            onClick={handleDelete}
+                            className="gap-2"
+                        >
+                            <Trash2 className="h-4 w-4" />
+                            Delete
+                        </Button>
                         <Button type="submit">Save changes</Button>
                     </DialogFooter>
                 </form>

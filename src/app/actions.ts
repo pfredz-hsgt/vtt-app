@@ -56,3 +56,37 @@ export async function deleteExpense(expenseId: string) {
     revalidatePath('/')
     return { success: true }
 }
+
+export async function updateExpense(expenseId: string, formData: FormData) {
+    const supabase = await createClient()
+
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) {
+        return { error: 'Unauthorized' }
+    }
+
+    const expenseDate = formData.get('expense_date') as string
+
+    const data = {
+        type: formData.get('type') as string,
+        odometer: parseInt(formData.get('odometer') as string),
+        cost: parseFloat(formData.get('cost') as string),
+        notes: formData.get('notes') as string,
+        ...(expenseDate && { created_at: expenseDate }),
+    }
+
+    // Verify the expense belongs to the user before updating
+    const { error } = await supabase
+        .from('expenses')
+        .update(data)
+        .eq('id', expenseId)
+        .eq('user_id', user.id)
+
+    if (error) {
+        return { error: error.message }
+    }
+
+    revalidatePath('/')
+    return { success: true }
+}
