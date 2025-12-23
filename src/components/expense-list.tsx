@@ -2,7 +2,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import { format } from 'date-fns'
 import { DateRange } from 'react-day-picker'
 import {
@@ -20,13 +20,24 @@ import {
 } from "@/components/ui/select"
 import { DateRangePicker } from "@/components/date-range-picker"
 import { EditExpenseDialog } from "@/components/edit-expense-dialog"
+import { ExpenseGroup } from '@/types'
+import { getCategories } from '@/lib/expense-categories'
 
-export function ExpenseList({ expenses, currentFilter }: { expenses: any[], currentFilter?: string }) {
+export function ExpenseList({ expenses, currentFilter, expenseGroup }: {
+    expenses: any[],
+    currentFilter?: string,
+    expenseGroup?: ExpenseGroup
+}) {
     const router = useRouter()
+    const pathname = usePathname()
     const searchParams = useSearchParams()
     const [dateRange, setDateRange] = useState<DateRange | undefined>()
     const [editingExpense, setEditingExpense] = useState<any | null>(null)
     const [editDialogOpen, setEditDialogOpen] = useState(false)
+
+    // Get categories based on expense group
+    const categories = expenseGroup ? getCategories(expenseGroup) : []
+    const showAllCategories = !expenseGroup
 
     function handleFilterChange(value: string) {
         const params = new URLSearchParams(searchParams.toString())
@@ -35,7 +46,7 @@ export function ExpenseList({ expenses, currentFilter }: { expenses: any[], curr
         } else {
             params.set('type', value)
         }
-        router.push(`/?${params.toString()}`)
+        router.push(`${pathname}?${params.toString()}`)
     }
 
     function handleDateRangeChange(range: DateRange | undefined) {
@@ -54,7 +65,7 @@ export function ExpenseList({ expenses, currentFilter }: { expenses: any[], curr
             params.delete('to')
         }
 
-        router.push(`/?${params.toString()}`)
+        router.push(`${pathname}?${params.toString()}`)
     }
 
     function handleCardClick(expense: any) {
@@ -78,19 +89,21 @@ export function ExpenseList({ expenses, currentFilter }: { expenses: any[], curr
                         setDateRange={handleDateRangeChange}
                         className="w-full sm:w-auto"
                     />
-                    <Select value={currentFilter || 'All'} onValueChange={handleFilterChange}>
-                        <SelectTrigger className="w-full sm:w-[180px]">
-                            <SelectValue placeholder="Filter by type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="All">All Types</SelectItem>
-                            <SelectItem value="Refuel">Refuel</SelectItem>
-                            <SelectItem value="Service">Service</SelectItem>
-                            <SelectItem value="Wash">Wash</SelectItem>
-                            <SelectItem value="Repair">Repair</SelectItem>
-                            <SelectItem value="Other">Other</SelectItem>
-                        </SelectContent>
-                    </Select>
+                    {!showAllCategories && (
+                        <Select value={currentFilter || 'All'} onValueChange={handleFilterChange}>
+                            <SelectTrigger className="w-full sm:w-[180px]">
+                                <SelectValue placeholder="Filter by category" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="All">All Categories</SelectItem>
+                                {categories.map((cat) => (
+                                    <SelectItem key={cat.name} value={cat.name}>
+                                        {cat.name}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    )}
                 </div>
 
                 {expenses.length > 0 && (
@@ -128,9 +141,11 @@ export function ExpenseList({ expenses, currentFilter }: { expenses: any[], curr
                             </CardHeader>
                             <CardContent>
                                 <div className="text-2xl font-bold">RM {expense.cost}</div>
-                                <p className="text-xs text-muted-foreground mt-1">
-                                    {expense.odometer.toLocaleString()} km
-                                </p>
+                                {expense.odometer && (
+                                    <p className="text-xs text-muted-foreground mt-1">
+                                        {expense.odometer.toLocaleString()} km
+                                    </p>
+                                )}
                                 {expense.notes && (
                                     <p className="mt-2 text-sm text-muted-foreground line-clamp-2">
                                         {expense.notes}

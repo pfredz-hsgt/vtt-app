@@ -4,8 +4,13 @@ import { useState, useEffect } from 'react'
 import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { AddExpenseDialog } from '@/components/add-expense-dialog'
+import { ExpenseGroup } from '@/types'
 
-export function FloatingAddButton() {
+interface FloatingAddButtonProps {
+    defaultGroup?: ExpenseGroup
+}
+
+export function FloatingAddButton({ defaultGroup = 'vehicle' }: FloatingAddButtonProps = {}) {
     const [isVisible, setIsVisible] = useState(false)
     const [dialogOpen, setDialogOpen] = useState(false)
 
@@ -39,6 +44,7 @@ export function FloatingAddButton() {
                 <AddExpenseDialog
                     open={dialogOpen}
                     onOpenChange={setDialogOpen}
+                    defaultGroup={defaultGroup}
                 />
             )}
         </>

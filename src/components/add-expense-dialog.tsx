@@ -23,29 +23,39 @@ import {
 } from "@/components/ui/select"
 import { DatePicker } from "@/components/date-picker"
 import { addExpense } from '@/app/actions'
+import { ExpenseGroup } from '@/types'
+import { getCategories } from '@/lib/expense-categories'
 
 interface AddExpenseDialogProps {
     open?: boolean
     onOpenChange?: (open: boolean) => void
+    defaultGroup?: ExpenseGroup
 }
 
-export function AddExpenseDialog({ open: controlledOpen, onOpenChange }: AddExpenseDialogProps = {}) {
+export function AddExpenseDialog({ open: controlledOpen, onOpenChange, defaultGroup = 'vehicle' }: AddExpenseDialogProps = {}) {
     const [internalOpen, setInternalOpen] = useState(false)
     const [date, setDate] = useState<Date | undefined>(new Date())
+    const [expenseGroup, setExpenseGroup] = useState<ExpenseGroup>(defaultGroup)
 
     const open = controlledOpen !== undefined ? controlledOpen : internalOpen
     const setOpen = onOpenChange || setInternalOpen
+
+    const categories = getCategories(expenseGroup)
+    const isVehicle = expenseGroup === 'vehicle'
 
     async function handleSubmit(formData: FormData) {
         if (date) {
             formData.append('expense_date', date.toISOString())
         }
+        formData.append('expense_group', expenseGroup)
+
         const result = await addExpense(formData)
         if (result?.error) {
             alert(result.error)
         } else {
             setOpen(false)
             setDate(new Date())
+            setExpenseGroup(defaultGroup)
         }
     }
 
@@ -58,14 +68,32 @@ export function AddExpenseDialog({ open: controlledOpen, onOpenChange }: AddExpe
                     </Button>
                 </DialogTrigger>
             )}
-            <DialogContent className="sm:max-w-[425px]">
+            <DialogContent className="sm:max-w-[425px] max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle>Add Expense</DialogTitle>
                     <DialogDescription>
-                        Record a new vehicle expense here.
+                        Record a new {expenseGroup} expense here.
                     </DialogDescription>
                 </DialogHeader>
                 <form action={handleSubmit} className="grid gap-4 py-4">
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="expense_group" className="text-right">
+                            Type
+                        </Label>
+                        <Select
+                            value={expenseGroup}
+                            onValueChange={(value) => setExpenseGroup(value as ExpenseGroup)}
+                        >
+                            <SelectTrigger className="col-span-3">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="vehicle">Vehicle</SelectItem>
+                                <SelectItem value="personal">Personal</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+
                     <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="date" className="text-right">
                             Date
@@ -74,35 +102,41 @@ export function AddExpenseDialog({ open: controlledOpen, onOpenChange }: AddExpe
                             <DatePicker date={date} setDate={setDate} />
                         </div>
                     </div>
+
                     <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="type" className="text-right">
-                            Type
+                            Category
                         </Label>
                         <Select name="type" required>
                             <SelectTrigger className="col-span-3">
-                                <SelectValue placeholder="Select type" />
+                                <SelectValue placeholder="Select category" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="Refuel">Refuel</SelectItem>
-                                <SelectItem value="Service">Service</SelectItem>
-                                <SelectItem value="Wash">Wash</SelectItem>
-                                <SelectItem value="Repair">Repair</SelectItem>
-                                <SelectItem value="Other">Other</SelectItem>
+                                {categories.map((cat) => (
+                                    <SelectItem key={cat.name} value={cat.name}>
+                                        {cat.name}
+                                    </SelectItem>
+                                ))}
                             </SelectContent>
                         </Select>
                     </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="odometer" className="text-right">
-                            Odometer
-                        </Label>
-                        <Input
-                            id="odometer"
-                            name="odometer"
-                            type="number"
-                            className="col-span-3"
-                            required
-                        />
-                    </div>
+
+                    {isVehicle && (
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="odometer" className="text-right">
+                                Odometer
+                            </Label>
+                            <Input
+                                id="odometer"
+                                name="odometer"
+                                type="number"
+                                className="col-span-3"
+                                placeholder="km"
+                                required={isVehicle}
+                            />
+                        </div>
+                    )}
+
                     <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="cost" className="text-right">
                             Cost
@@ -113,9 +147,11 @@ export function AddExpenseDialog({ open: controlledOpen, onOpenChange }: AddExpe
                             type="number"
                             step="0.01"
                             className="col-span-3"
+                            placeholder="RM"
                             required
                         />
                     </div>
+
                     <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="notes" className="text-right">
                             Notes
@@ -124,10 +160,12 @@ export function AddExpenseDialog({ open: controlledOpen, onOpenChange }: AddExpe
                             id="notes"
                             name="notes"
                             className="col-span-3"
+                            placeholder="Optional"
                         />
                     </div>
+
                     <DialogFooter>
-                        <Button type="submit">Save changes</Button>
+                        <Button type="submit">Save Expense</Button>
                     </DialogFooter>
                 </form>
             </DialogContent>

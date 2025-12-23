@@ -23,14 +23,16 @@ import {
 import { DatePicker } from "@/components/date-picker"
 import { updateExpense, deleteExpense } from '@/app/actions'
 import { useRouter } from 'next/navigation'
+import { getCategories, getExpenseGroup } from '@/lib/expense-categories'
 
 interface EditExpenseDialogProps {
     expense: {
         id: string
         type: string
-        odometer: number
+        expense_group?: string
+        odometer?: number | null
         cost: number
-        notes: string
+        notes?: string | null
         created_at: string
     } | null
     open: boolean
@@ -82,13 +84,18 @@ export function EditExpenseDialog({ expense, open, onOpenChange }: EditExpenseDi
 
     if (!expense) return null
 
+    // Determine expense group from the expense type
+    const expenseGroup = expense.expense_group || getExpenseGroup(expense.type)
+    const categories = getCategories(expenseGroup as 'vehicle' | 'personal')
+    const isVehicle = expenseGroup === 'vehicle'
+
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[425px]">
+            <DialogContent className="sm:max-w-[425px] max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle>Edit Expense</DialogTitle>
                     <DialogDescription>
-                        Update your vehicle expense details.
+                        Update your {expenseGroup} expense details.
                     </DialogDescription>
                 </DialogHeader>
                 <form action={handleSubmit} className="grid gap-4 py-4">
@@ -100,36 +107,42 @@ export function EditExpenseDialog({ expense, open, onOpenChange }: EditExpenseDi
                             <DatePicker date={date} setDate={setDate} />
                         </div>
                     </div>
+
                     <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="edit-type" className="text-right">
-                            Type
+                            Category
                         </Label>
                         <Select name="type" value={type} onValueChange={setType} required>
                             <SelectTrigger className="col-span-3">
-                                <SelectValue placeholder="Select type" />
+                                <SelectValue placeholder="Select category" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="Refuel">Refuel</SelectItem>
-                                <SelectItem value="Service">Service</SelectItem>
-                                <SelectItem value="Wash">Wash</SelectItem>
-                                <SelectItem value="Repair">Repair</SelectItem>
-                                <SelectItem value="Other">Other</SelectItem>
+                                {categories.map((cat) => (
+                                    <SelectItem key={cat.name} value={cat.name}>
+                                        {cat.name}
+                                    </SelectItem>
+                                ))}
                             </SelectContent>
                         </Select>
                     </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="edit-odometer" className="text-right">
-                            Odometer
-                        </Label>
-                        <Input
-                            id="edit-odometer"
-                            name="odometer"
-                            type="number"
-                            defaultValue={expense.odometer}
-                            className="col-span-3"
-                            required
-                        />
-                    </div>
+
+                    {isVehicle && (
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="edit-odometer" className="text-right">
+                                Odometer
+                            </Label>
+                            <Input
+                                id="edit-odometer"
+                                name="odometer"
+                                type="number"
+                                defaultValue={expense.odometer || ''}
+                                className="col-span-3"
+                                placeholder="km"
+                                required={isVehicle}
+                            />
+                        </div>
+                    )}
+
                     <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="edit-cost" className="text-right">
                             Cost
@@ -141,9 +154,11 @@ export function EditExpenseDialog({ expense, open, onOpenChange }: EditExpenseDi
                             step="0.01"
                             defaultValue={expense.cost}
                             className="col-span-3"
+                            placeholder="RM"
                             required
                         />
                     </div>
+
                     <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="edit-notes" className="text-right">
                             Notes
@@ -153,8 +168,10 @@ export function EditExpenseDialog({ expense, open, onOpenChange }: EditExpenseDi
                             name="notes"
                             defaultValue={expense.notes || ''}
                             className="col-span-3"
+                            placeholder="Optional"
                         />
                     </div>
+
                     <DialogFooter className="gap-2">
                         <Button
                             type="button"
