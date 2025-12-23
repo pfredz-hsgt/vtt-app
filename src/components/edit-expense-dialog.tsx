@@ -85,7 +85,7 @@ export function EditExpenseDialog({ expense, open, onOpenChange }: EditExpenseDi
     if (!expense) return null
 
     // Determine expense group from the expense type
-    const expenseGroup = expense.expense_group || getExpenseGroup(expense.type)
+    const expenseGroup = expense.expense_group || getExpenseGroup(expense.type as any)
     const categories = getCategories(expenseGroup as 'vehicle' | 'personal')
     const isVehicle = expenseGroup === 'vehicle'
 

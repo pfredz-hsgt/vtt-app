@@ -42,7 +42,7 @@ export default async function AnalyticsPage() {
     }, {} as Record<string, number>)
 
     const topCategories = Object.entries(categoryTotals)
-        .sort(([, a], [, b]) => b - a)
+        .sort(([, a], [, b]) => (b as number) - (a as number))
         .slice(0, 5)
 
     return (
@@ -125,14 +125,14 @@ export default async function AnalyticsPage() {
                 </CardHeader>
                 <CardContent>
                     <div className="space-y-4">
-                        {topCategories.map(([category, total], index) => {
-                            const percentage = (total / grandTotal) * 100
+                        {topCategories.map(([category, total]) => {
+                            const percentage = ((total as number) / grandTotal) * 100
                             return (
                                 <div key={category}>
                                     <div className="flex items-center justify-between mb-2">
                                         <span className="text-sm font-medium">{category}</span>
                                         <span className="text-sm text-muted-foreground">
-                                            RM {total.toFixed(2)} ({percentage.toFixed(1)}%)
+                                            RM {(total as number).toFixed(2)} ({percentage.toFixed(1)}%)
                                         </span>
                                     </div>
                                     <div className="w-full bg-secondary rounded-full h-2">
