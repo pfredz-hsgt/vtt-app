@@ -1,179 +1,113 @@
--- Enhanced Expense Tracker Schema
--- Supports both vehicle and personal expenses with recurring expense functionality
+-- Unified VTT Superapp Schema
 
--- ============================================================================
--- EXPENSES TABLE (Enhanced)
--- ============================================================================
+-- ==========================================
+-- VTT Core (Existing)
+-- ==========================================
 
--- First, add new columns to existing expenses table
-ALTER TABLE expenses 
-ADD COLUMN IF NOT EXISTS expense_group text DEFAULT 'vehicle' 
-CHECK (expense_group IN ('vehicle', 'personal'));
-
--- Make odometer nullable (only required for vehicle expenses)
-ALTER TABLE expenses 
-ALTER COLUMN odometer DROP NOT NULL;
-
--- Drop existing type constraint and add new one with all categories
-ALTER TABLE expenses 
-DROP CONSTRAINT IF EXISTS expenses_type_check;
-
-ALTER TABLE expenses 
-ADD CONSTRAINT expenses_type_check 
-CHECK (type IN (
-  -- Vehicle categories
-  'Fuel', 'Maintenance', 'Insurance', 'Repairs', 'Parking', 
-  'Tolls', 'Cleaning', 'Parts', 'Accessories', 'Vehicle Other',
-  -- Personal categories
-  'Food & Dining', 'Groceries', 'Shopping', 'Entertainment', 
-  'Leisure', 'Health & Fitness', 'Transportation', 'Utilities', 
-  'Subscriptions', 'Education', 'Gifts', 'Personal Care', 'Personal Other',
-  -- Legacy categories (for backward compatibility)
-  'Refuel', 'Service', 'Wash', 'Repair', 'Other'
-));
-
--- Add indexes for better query performance
-CREATE INDEX IF NOT EXISTS idx_expenses_expense_group ON expenses(expense_group);
-CREATE INDEX IF NOT EXISTS idx_expenses_type ON expenses(type);
-CREATE INDEX IF NOT EXISTS idx_expenses_created_at ON expenses(created_at);
-CREATE INDEX IF NOT EXISTS idx_expenses_user_group ON expenses(user_id, expense_group);
-
--- ============================================================================
--- RECURRING EXPENSES TABLE
--- ============================================================================
-
-CREATE TABLE IF NOT EXISTS recurring_expenses (
-  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
-  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
-  updated_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
-  user_id uuid REFERENCES auth.users NOT NULL,
-  
-  -- Basic info
-  name text NOT NULL, -- e.g., "Car Loan", "Netflix Subscription"
-  amount decimal(10, 2) NOT NULL,
-  
-  -- Categorization
-  expense_group text NOT NULL CHECK (expense_group IN ('vehicle', 'personal')),
-  type text NOT NULL, -- category from expenses table
-  
-  -- Recurrence settings
-  frequency text NOT NULL CHECK (frequency IN ('monthly', 'weekly', 'yearly')),
-  day_of_month integer CHECK (day_of_month BETWEEN 1 AND 31), -- for monthly
-  day_of_week integer CHECK (day_of_week BETWEEN 0 AND 6), -- for weekly (0=Sunday)
-  
-  -- Date range
-  start_date date NOT NULL,
-  end_date date, -- optional, for fixed-term loans
-  
-  -- Tracking
-  last_generated_date date, -- track last time expense was generated
-  next_occurrence_date date, -- calculated next occurrence
-  
-  -- Optional fields
-  odometer integer, -- optional, for vehicle expenses
-  notes text,
-  
-  -- Status
-  is_active boolean DEFAULT true -- pause/resume functionality
+-- Create a table for vehicle expenses
+create table if not exists expenses (
+  id uuid default gen_random_uuid() primary key,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  user_id uuid references auth.users not null,
+  type text check (type in ('Refuel', 'Service', 'Wash', 'Repair', 'Other')) not null,
+  odometer integer not null,
+  cost decimal(10, 2) not null,
+  notes text
 );
 
--- Enable RLS on recurring_expenses
-ALTER TABLE recurring_expenses ENABLE ROW LEVEL SECURITY;
+-- Enable Row Level Security (RLS)
+alter table expenses enable row level security;
 
--- RLS Policies for recurring_expenses
-CREATE POLICY "Users can view their own recurring expenses"
-ON recurring_expenses FOR SELECT
-USING (auth.uid() = user_id);
+-- Policies for expenses
+create policy "Users can view their own expenses" on expenses for select using (auth.uid() = user_id);
+create policy "Users can insert their own expenses" on expenses for insert with check (auth.uid() = user_id);
+create policy "Users can update their own expenses" on expenses for update using (auth.uid() = user_id);
+create policy "Users can delete their own expenses" on expenses for delete using (auth.uid() = user_id);
 
-CREATE POLICY "Users can insert their own recurring expenses"
-ON recurring_expenses FOR INSERT
-WITH CHECK (auth.uid() = user_id);
 
-CREATE POLICY "Users can update their own recurring expenses"
-ON recurring_expenses FOR UPDATE
-USING (auth.uid() = user_id);
+-- ==========================================
+-- Luncheon App (Namespaced: luncheon_*)
+-- ==========================================
 
-CREATE POLICY "Users can delete their own recurring expenses"
-ON recurring_expenses FOR DELETE
-USING (auth.uid() = user_id);
+CREATE TABLE IF NOT EXISTS luncheon_menus (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  menu_date DATE NOT NULL,
+  is_closed BOOLEAN DEFAULT FALSE
+);
 
--- Add indexes for recurring_expenses
-CREATE INDEX IF NOT EXISTS idx_recurring_expenses_user_id ON recurring_expenses(user_id);
-CREATE INDEX IF NOT EXISTS idx_recurring_expenses_is_active ON recurring_expenses(is_active);
-CREATE INDEX IF NOT EXISTS idx_recurring_expenses_next_occurrence ON recurring_expenses(next_occurrence_date);
+CREATE TABLE IF NOT EXISTS luncheon_menu_items (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  menu_id UUID REFERENCES luncheon_menus(id) ON DELETE CASCADE,
+  item_name TEXT NOT NULL
+);
 
--- ============================================================================
--- FUNCTIONS
--- ============================================================================
+CREATE TABLE IF NOT EXISTS luncheon_orders (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  menu_id UUID REFERENCES luncheon_menus(id) ON DELETE CASCADE,
+  customer_name TEXT NOT NULL,
+  remarks TEXT,
+  is_paid BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
 
--- Function to update updated_at timestamp
-CREATE OR REPLACE FUNCTION update_updated_at_column()
-RETURNS TRIGGER AS $$
-BEGIN
-  NEW.updated_at = timezone('utc'::text, now());
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
+CREATE TABLE IF NOT EXISTS luncheon_order_details (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  order_id UUID REFERENCES luncheon_orders(id) ON DELETE CASCADE,
+  item_name TEXT NOT NULL,
+  quantity INTEGER NOT NULL DEFAULT 1
+);
 
--- Trigger to auto-update updated_at
-DROP TRIGGER IF EXISTS update_recurring_expenses_updated_at ON recurring_expenses;
-CREATE TRIGGER update_recurring_expenses_updated_at
-  BEFORE UPDATE ON recurring_expenses
-  FOR EACH ROW
-  EXECUTE FUNCTION update_updated_at_column();
+-- Indexes for Luncheon
+CREATE INDEX IF NOT EXISTS idx_luncheon_menu_items_menu_id ON luncheon_menu_items(menu_id);
+CREATE INDEX IF NOT EXISTS idx_luncheon_orders_menu_id ON luncheon_orders(menu_id);
+CREATE INDEX IF NOT EXISTS idx_luncheon_order_details_order_id ON luncheon_order_details(order_id);
+CREATE INDEX IF NOT EXISTS idx_luncheon_menus_date ON luncheon_menus(menu_date DESC);
 
--- Function to calculate next occurrence date
-CREATE OR REPLACE FUNCTION calculate_next_occurrence(
-  p_frequency text,
-  p_last_date date,
-  p_day_of_month integer,
-  p_day_of_week integer,
-  p_start_date date
-)
-RETURNS date AS $$
-DECLARE
-  v_next_date date;
-  v_base_date date;
-BEGIN
-  -- Use last_generated_date if available, otherwise use start_date
-  v_base_date := COALESCE(p_last_date, p_start_date);
-  
-  CASE p_frequency
-    WHEN 'monthly' THEN
-      -- Add one month
-      v_next_date := v_base_date + INTERVAL '1 month';
-      -- Adjust to specified day of month
-      v_next_date := date_trunc('month', v_next_date) + (p_day_of_month - 1) * INTERVAL '1 day';
-      
-    WHEN 'weekly' THEN
-      -- Add one week
-      v_next_date := v_base_date + INTERVAL '1 week';
-      
-    WHEN 'yearly' THEN
-      -- Add one year
-      v_next_date := v_base_date + INTERVAL '1 year';
-      
-    ELSE
-      v_next_date := v_base_date;
-  END CASE;
-  
-  RETURN v_next_date;
-END;
-$$ LANGUAGE plpgsql;
 
--- ============================================================================
--- MIGRATION NOTES
--- ============================================================================
+-- ==========================================
+-- Dolce App (Namespaced: dolce_*)
+-- ==========================================
 
--- To migrate existing data:
--- 1. All existing expenses will have expense_group = 'vehicle' (default)
--- 2. Odometer is now nullable, existing data remains unchanged
--- 3. Old category types (Refuel, Service, Wash, Repair, Other) still work
--- 4. New categories are available for new entries
+CREATE TABLE IF NOT EXISTS dolce_menus (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  menu_date DATE NOT NULL,
+  is_closed BOOLEAN DEFAULT FALSE
+);
 
--- To update old categories to new ones (optional):
--- UPDATE expenses SET type = 'Fuel' WHERE type = 'Refuel';
--- UPDATE expenses SET type = 'Maintenance' WHERE type = 'Service';
--- UPDATE expenses SET type = 'Cleaning' WHERE type = 'Wash';
--- UPDATE expenses SET type = 'Repairs' WHERE type = 'Repair';
--- UPDATE expenses SET type = 'Vehicle Other' WHERE type = 'Other';
+CREATE TABLE IF NOT EXISTS dolce_menu_items (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  menu_id UUID REFERENCES dolce_menus(id) ON DELETE CASCADE,
+  item_name TEXT NOT NULL,
+  price NUMERIC(10, 2) DEFAULT 0.00,
+  category TEXT DEFAULT 'General Menu',
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS dolce_orders (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  menu_id UUID REFERENCES dolce_menus(id) ON DELETE CASCADE,
+  customer_name TEXT NOT NULL,
+  remarks TEXT,
+  is_paid BOOLEAN DEFAULT FALSE,
+  is_delivery BOOLEAN DEFAULT FALSE,
+  delivery_address TEXT,
+  phone_number TEXT,
+  total_amount NUMERIC(10, 2) DEFAULT 0.00,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS dolce_order_details (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  order_id UUID REFERENCES dolce_orders(id) ON DELETE CASCADE,
+  item_name TEXT NOT NULL,
+  quantity INTEGER NOT NULL DEFAULT 1,
+  price NUMERIC(10, 2) DEFAULT 0.00
+);
+
+-- Indexes for Dolce
+CREATE INDEX IF NOT EXISTS idx_dolce_menu_items_menu_id ON dolce_menu_items(menu_id);
+CREATE INDEX IF NOT EXISTS idx_dolce_orders_menu_id ON dolce_orders(menu_id);
+CREATE INDEX IF NOT EXISTS idx_dolce_order_details_order_id ON dolce_order_details(order_id);
+CREATE INDEX IF NOT EXISTS idx_dolce_menus_date ON dolce_menus(menu_date DESC);

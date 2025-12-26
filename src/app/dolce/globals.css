@@ -1,0 +1,41 @@
+:root {
+  --adm-color-primary: #0EA5E9;
+  --adm-color-success: #10B981;
+  --adm-color-danger: #EF4444;
+  --adm-color-warning: #F59E0B;
+  --adm-color-text: #1A1A1A;
+  --adm-color-text-secondary: #64748B;
+  --adm-color-background: #FAFAFA;
+  --adm-font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+}
+
+body {
+  background: var(--adm-color-background);
+  color: var(--adm-color-text);
+  font-family: var(--adm-font-family);
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom utility classes to replace some Tailwind usage where needed */
+.text-center {
+  text-align: center;
+}
+
+.mb-4 {
+  margin-bottom: 1rem;
+}
+
+.mb-6 {
+  margin-bottom: 1.5rem;
+}
+
+.p-4 {
+  padding: 1rem;
+}
+
+.font-bold {
+  font-weight: bold;
+}
