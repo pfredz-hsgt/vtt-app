@@ -15,7 +15,7 @@ import {
 } from 'antd-mobile'
 import { DownOutline, CloseOutline } from 'antd-mobile-icons'
 import { Trash2 } from 'lucide-react'
-import { updateExpense, deleteExpense } from '@/app/actions'
+import { updateExpense, deleteExpense } from '@/app/(main)/actions'
 import { useRouter } from 'next/navigation'
 import { getCategories, getExpenseGroup } from '@/lib/expense-categories'
 import dayjs from 'dayjs'

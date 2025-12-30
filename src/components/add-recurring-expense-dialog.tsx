@@ -16,7 +16,7 @@ import {
 import { DownOutline, CloseOutline } from 'antd-mobile-icons'
 import { ExpenseGroup, RecurringFrequency } from '@/types'
 import { getCategories } from '@/lib/expense-categories'
-import { addRecurringExpense } from '@/app/actions'
+import { addRecurringExpense } from '@/app/(main)/actions'
 import { useRouter } from 'next/navigation'
 import dayjs from 'dayjs'
 

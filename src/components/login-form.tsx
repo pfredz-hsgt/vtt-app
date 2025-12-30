@@ -1,7 +1,7 @@
 'use client'
 
 import { Card, Form, Input, Button } from 'antd-mobile'
-import { login, signup } from '@/app/login/actions'
+import { login, signup } from '@/app/(main)/login/actions'
 
 interface LoginFormProps {
     message?: string

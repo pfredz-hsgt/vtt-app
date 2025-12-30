@@ -14,7 +14,7 @@ import {
 } from 'antd-mobile'
 import { DownOutline, CloseOutline } from 'antd-mobile-icons'
 import { Plus } from 'lucide-react'
-import { addExpense } from '@/app/actions'
+import { addExpense } from '@/app/(main)/actions'
 import { ExpenseGroup } from '@/types'
 import { getCategories } from '@/lib/expense-categories'
 import dayjs from 'dayjs'
