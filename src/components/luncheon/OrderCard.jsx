@@ -20,9 +20,9 @@ export default function OrderCard({ order, onDelete, onTogglePaid }) {
             </div>
 
             <div style={{ marginBottom: '12px' }}>
-                {order.order_details && order.order_details.length > 0 ? (
+                {(order.luncheon_order_details || order.order_details) && (order.luncheon_order_details || order.order_details).length > 0 ? (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                        {order.order_details.map((detail, index) => (
+                        {(order.luncheon_order_details || order.order_details).map((detail, index) => (
                             detail.quantity > 0 && (
                                 <div key={index} style={{ display: 'flex', alignItems: 'center', fontSize: '15px' }}>
                                     <span style={{

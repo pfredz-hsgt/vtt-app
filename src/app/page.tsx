@@ -167,7 +167,7 @@ export default function Home() {
               }
               extra={
                 <span style={{ fontWeight: 600, color: '#333' }}>
-                  RM {expense.cost}
+                  RM {Number(expense.cost).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </span>
               }
               description={expense.notes || expense.expense_group}

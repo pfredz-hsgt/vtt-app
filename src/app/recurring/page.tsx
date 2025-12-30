@@ -17,14 +17,21 @@ export default async function RecurringPage() {
         .order('next_occurrence_date', { ascending: true })
 
     return (
-        <div className="space-y-4 sm:space-y-6">
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-0 sm:items-center sm:justify-between">
+        <div style={{ padding: '16px', paddingBottom: '80px', maxWidth: '800px', margin: '0 auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
                 <div>
-                    <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                    <h1 style={{
+                        fontSize: '24px',
+                        fontWeight: 'bold',
+                        background: 'linear-gradient(to right, #1677ff, #13c2c2)',
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent',
+                        margin: '0 0 4px 0'
+                    }}>
                         Recurring Expenses
                     </h1>
-                    <p className="text-sm text-muted-foreground mt-1">
-                        Manage your recurring expenses like loans, subscriptions, and regular payments
+                    <p style={{ fontSize: '14px', color: '#666', margin: 0 }}>
+                        Manage your recurring expenses
                     </p>
                 </div>
                 <AddRecurringExpenseDialog />

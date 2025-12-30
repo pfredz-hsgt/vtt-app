@@ -75,7 +75,7 @@ export function Sidebar() {
                                     className={cn(
                                         'flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200',
                                         'hover:bg-accent hover:text-accent-foreground',
-                                        isActive && 'bg-primary text-primary-foreground hover:bg-primary/90'
+                                        isActive && 'bg-sidebar-primary !text-white hover:bg-sidebar-primary/90 hover:!text-white'
                                     )}
                                 >
                                     <Icon className="h-5 w-5 shrink-0" />

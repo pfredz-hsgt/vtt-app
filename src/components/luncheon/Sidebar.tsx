@@ -63,18 +63,18 @@ export default function Sidebar() {
                                 return (
                                     <List.Item
                                         key={item.href}
-                                        prefix={<item.icon size={20} color={isActive ? 'var(--adm-color-primary)' : 'var(--adm-color-text-secondary)'} />}
+                                        prefix={<item.icon size={20} color={isActive ? '#fff' : 'var(--adm-color-text-secondary)'} />}
                                         onClick={() => {
                                             router.push(item.href)
                                             setVisible(false)
                                         }}
                                         style={isActive ? {
-                                            background: '#EFF6FF',
-                                            '--active-background-color': '#EFF6FF'
+                                            background: 'var(--adm-color-primary)',
+                                            '--active-background-color': 'var(--adm-color-primary)'
                                         } : {}}
                                     >
                                         <span style={{
-                                            color: isActive ? 'var(--adm-color-primary)' : 'var(--adm-color-text)',
+                                            color: isActive ? '#fff' : 'var(--adm-color-text)',
                                             fontWeight: isActive ? 500 : 400
                                         }}>
                                             {item.name}

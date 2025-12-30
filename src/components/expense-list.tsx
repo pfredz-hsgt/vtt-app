@@ -1,24 +1,9 @@
 'use client'
-'use client'
 
 import { useState } from 'react'
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import { format } from 'date-fns'
-import { DateRange } from 'react-day-picker'
-import {
-    Card,
-    CardContent,
-    CardHeader,
-    CardTitle,
-} from "@/components/ui/card"
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select"
-import { DateRangePicker } from "@/components/date-range-picker"
+import { Card, List, Selector, Tag } from 'antd-mobile'
 import { EditExpenseDialog } from "@/components/edit-expense-dialog"
 import { ExpenseGroup } from '@/types'
 import { getCategories } from '@/lib/expense-categories'
@@ -31,7 +16,8 @@ export function ExpenseList({ expenses, currentFilter, expenseGroup }: {
     const router = useRouter()
     const pathname = usePathname()
     const searchParams = useSearchParams()
-    const [dateRange, setDateRange] = useState<DateRange | undefined>()
+
+    // State
     const [editingExpense, setEditingExpense] = useState<any | null>(null)
     const [editDialogOpen, setEditDialogOpen] = useState(false)
 
@@ -39,32 +25,14 @@ export function ExpenseList({ expenses, currentFilter, expenseGroup }: {
     const categories = expenseGroup ? getCategories(expenseGroup) : []
     const showAllCategories = !expenseGroup
 
-    function handleFilterChange(value: string) {
+    function handleFilterChange(value: string[]) {
+        const val = value[0];
         const params = new URLSearchParams(searchParams.toString())
-        if (value === 'All') {
+        if (!val || val === 'All') {
             params.delete('type')
         } else {
-            params.set('type', value)
+            params.set('type', val)
         }
-        router.push(`${pathname}?${params.toString()}`)
-    }
-
-    function handleDateRangeChange(range: DateRange | undefined) {
-        setDateRange(range)
-        const params = new URLSearchParams(searchParams.toString())
-
-        if (range?.from) {
-            params.set('from', range.from.toISOString())
-        } else {
-            params.delete('from')
-        }
-
-        if (range?.to) {
-            params.set('to', range.to.toISOString())
-        } else {
-            params.delete('to')
-        }
-
         router.push(`${pathname}?${params.toString()}`)
     }
 
@@ -80,87 +48,102 @@ export function ExpenseList({ expenses, currentFilter, expenseGroup }: {
 
     const totalAmount = expenses.reduce((sum, expense) => sum + parseFloat(expense.cost), 0)
 
+    // Filter options
+    const filterOptions = [
+        { label: 'All', value: 'All' },
+        ...categories.map(c => ({ label: c.name, value: c.name }))
+    ];
+
     return (
         <>
-            <div className="space-y-4 sm:space-y-6">
-                <div className="flex flex-col gap-3 sm:flex-row sm:gap-4 sm:justify-between sm:items-center">
-                    <DateRangePicker
-                        dateRange={dateRange}
-                        setDateRange={handleDateRangeChange}
-                        className="w-full sm:w-auto"
-                    />
-                    {!showAllCategories && (
-                        <Select value={currentFilter || 'All'} onValueChange={handleFilterChange}>
-                            <SelectTrigger className="w-full sm:w-[180px]">
-                                <SelectValue placeholder="Filter by category" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="All">All Categories</SelectItem>
-                                {categories.map((cat) => (
-                                    <SelectItem key={cat.name} value={cat.name}>
-                                        {cat.name}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    )}
-                </div>
+            <div style={{ marginBottom: '16px' }}>
+                {!showAllCategories && (
+                    <div style={{ overflowX: 'auto', whiteSpace: 'nowrap', paddingBottom: '8px' }}>
+                        <Selector
+                            options={filterOptions}
+                            value={[currentFilter || 'All']}
+                            onChange={handleFilterChange}
+                            style={{
+                                '--border-radius': '100px',
+                                '--color': '#f5f5f5',
+                                '--checked-color': '#e6f7ff',
+                                '--text-color': '#666',
+                                '--checked-text-color': '#1677ff',
+                                '--padding': '4px 12px'
+                            }}
+                        />
+                    </div>
+                )}
 
                 {expenses.length > 0 && (
-                    <Card className="border-primary/20 bg-card">
-                        <CardHeader className="pb-3">
-                            <CardTitle className="text-sm font-medium text-muted-foreground">
-                                Total Amount
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-3xl sm:text-4xl font-bold text-primary">
-                                RM {totalAmount.toFixed(2)}
-                            </div>
-                            <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-                                {expenses.length} expense{expenses.length !== 1 ? 's' : ''}
-                            </p>
-                        </CardContent>
+                    <Card style={{
+                        marginBottom: '16px',
+                        background: 'linear-gradient(135deg, #1677ff 0%, #13c2c2 100%)',
+                        color: 'white',
+                        border: 'none'
+                    }}>
+                        <div style={{ opacity: 0.9, fontSize: '13px' }}>
+                            Total Amount
+                        </div>
+                        <div style={{ fontSize: '32px', fontWeight: 'bold' }}>
+                            RM {totalAmount.toFixed(2)}
+                        </div>
+                        <div style={{ opacity: 0.9, fontSize: '12px', marginTop: '4px' }}>
+                            {expenses.length} expense{expenses.length !== 1 ? 's' : ''}
+                        </div>
                     </Card>
                 )}
 
-                <div className="grid gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <List header='Expenses'>
                     {expenses.map((expense) => (
-                        <Card
+                        <List.Item
                             key={expense.id}
-                            className="hover:shadow-md transition-all duration-200 hover:border-primary/40 cursor-pointer"
                             onClick={() => handleCardClick(expense)}
+                            prefix={
+                                <div style={{
+                                    width: 40,
+                                    height: 40,
+                                    borderRadius: 20,
+                                    background: '#f0f0f0',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    fontSize: '18px'
+                                }}>
+                                    {expense.expense_group === 'vehicle' ? '🚗' : '👤'}
+                                </div>
+                            }
+                            extra={
+                                <div style={{ textAlign: 'right' }}>
+                                    <div style={{ fontWeight: 'bold', fontSize: '16px', color: '#333' }}>
+                                        RM {expense.cost}
+                                    </div>
+                                    <div style={{ fontSize: '12px', color: '#999' }}>
+                                        {format(new Date(expense.created_at), 'MMM d')}
+                                    </div>
+                                </div>
+                            }
+                            description={
+                                <div>
+                                    {expense.odometer && (
+                                        <Tag color='geekblue' fill='outline' style={{ marginRight: '8px', border: 'none', background: '#f0f5ff' }}>
+                                            {expense.odometer.toLocaleString()} km
+                                        </Tag>
+                                    )}
+                                    {expense.notes && <span style={{ fontSize: '12px' }}>{expense.notes}</span>}
+                                </div>
+                            }
                         >
-                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium text-primary">
-                                    {expense.type}
-                                </CardTitle>
-                                <span className="text-xs text-muted-foreground">
-                                    {format(new Date(expense.created_at), 'MMM d, yyyy')}
-                                </span>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="text-2xl font-bold">RM {expense.cost}</div>
-                                {expense.odometer && (
-                                    <p className="text-xs text-muted-foreground mt-1">
-                                        {expense.odometer.toLocaleString()} km
-                                    </p>
-                                )}
-                                {expense.notes && (
-                                    <p className="mt-2 text-sm text-muted-foreground line-clamp-2">
-                                        {expense.notes}
-                                    </p>
-                                )}
-                            </CardContent>
-                        </Card>
+                            {expense.type}
+                        </List.Item>
                     ))}
-                    {expenses.length === 0 && (
-                        <div className="col-span-full text-center text-muted-foreground py-12 sm:py-16">
-                            <p className="text-base sm:text-lg">No expenses found.</p>
-                            <p className="text-xs sm:text-sm mt-2">Add your first expense to get started!</p>
-                        </div>
-                    )}
-                </div>
+                </List>
+
+                {expenses.length === 0 && (
+                    <div style={{ padding: '40px 0', textAlign: 'center', color: '#999' }}>
+                        <p>No expenses found.</p>
+                    </div>
+                )}
             </div>
 
             <EditExpenseDialog

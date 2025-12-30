@@ -41,7 +41,7 @@ export default function OrderCard({ order, onDelete, onTogglePaid }) {
       </div>
 
       <div style={{ marginBottom: '16px' }}>
-        {order.order_details && order.order_details.map((detail) => (
+        {(order.dolce_order_details || order.order_details) && (order.dolce_order_details || order.order_details).map((detail) => (
           <div key={detail.id || Math.random()} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px', fontSize: '15px' }}>
             <span>{detail.item_name}</span>
             <span style={{ fontWeight: 500 }}>
