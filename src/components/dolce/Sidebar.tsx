@@ -64,6 +64,7 @@ export default function Sidebar() {
                                 return (
                                     <List.Item
                                         key={item.href}
+                                        arrow={item.name === 'Back to Main App' ? false : undefined}
                                         prefix={<item.icon size={20} color={isActive ? '#fff' : 'var(--adm-color-text-secondary)'} />}
                                         onClick={() => {
                                             router.push(item.href)

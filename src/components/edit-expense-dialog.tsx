@@ -138,6 +138,7 @@ export function EditExpenseDialog({ expense, open, onOpenChange }: EditExpenseDi
                             onClick={(e, datePickerRef: any) => {
                                 datePickerRef.current?.open()
                             }}
+                            arrow={false}
                         >
                             <DatePicker
                                 confirmText="OK"
@@ -166,6 +167,7 @@ export function EditExpenseDialog({ expense, open, onOpenChange }: EditExpenseDi
                             rules={[{ required: true, message: 'Please select a category' }]}
                             trigger='onConfirm'
                             onClick={() => setPickerVisible(true)}
+                            arrow={false}
                         >
                             <Picker
                                 confirmText="OK"

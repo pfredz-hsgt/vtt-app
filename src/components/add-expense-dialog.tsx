@@ -122,6 +122,7 @@ export function AddExpenseDialog({ open: controlledOpen, onOpenChange, defaultGr
                                 label='Expense Type'
                                 trigger='onConfirm'
                                 onClick={() => setTypePickerVisible(true)}
+                                arrow={false}
                             >
                                 <Picker
                                     confirmText="OK"
@@ -166,6 +167,7 @@ export function AddExpenseDialog({ open: controlledOpen, onOpenChange, defaultGr
                                 onClick={(e, datePickerRef: any) => {
                                     datePickerRef.current?.open()
                                 }}
+                                arrow={false}
                             >
                                 <DatePicker
                                     confirmText="OK"
@@ -194,6 +196,7 @@ export function AddExpenseDialog({ open: controlledOpen, onOpenChange, defaultGr
                                 rules={[{ required: true, message: 'Please select a category' }]}
                                 trigger='onConfirm'
                                 onClick={() => setPickerVisible(true)}
+                                arrow={false}
                             >
                                 <Picker
                                     confirmText="OK"

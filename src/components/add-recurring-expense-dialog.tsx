@@ -140,11 +140,14 @@ export function AddRecurringExpenseDialog() {
                                 label='Group'
                                 trigger='onConfirm'
                                 onClick={() => setGroupPickerVisible(true)}
+                                arrow={false}
                             >
                                 <Picker
                                     columns={[groupOptions]}
                                     visible={groupPickerVisible}
                                     onClose={() => setGroupPickerVisible(false)}
+                                    confirmText="OK"
+                                    cancelText="Cancel"
                                     onConfirm={v => {
                                         if (v[0]) setExpenseGroup(v[0] as ExpenseGroup)
                                     }}
@@ -164,11 +167,14 @@ export function AddRecurringExpenseDialog() {
                                 rules={[{ required: true, message: 'Category is required' }]}
                                 trigger='onConfirm'
                                 onClick={() => setCategoryPickerVisible(true)}
+                                arrow={false}
                             >
                                 <Picker
                                     columns={[categories.map(c => ({ label: c.name, value: c.name }))]}
                                     visible={categoryPickerVisible}
                                     onClose={() => setCategoryPickerVisible(false)}
+                                    confirmText="OK"
+                                    cancelText="Cancel"
                                 >
                                     {items => (
                                         <div className='form-picker-trigger'>
@@ -188,11 +194,14 @@ export function AddRecurringExpenseDialog() {
                                 label='Frequency'
                                 trigger='onConfirm'
                                 onClick={() => setFreqPickerVisible(true)}
+                                arrow={false}
                             >
                                 <Picker
                                     columns={[frequencyOptions]}
                                     visible={freqPickerVisible}
                                     onClose={() => setFreqPickerVisible(false)}
+                                    confirmText="OK"
+                                    cancelText="Cancel"
                                     onConfirm={v => {
                                         if (v[0]) setFrequency(v[0] as RecurringFrequency)
                                     }}
@@ -221,10 +230,13 @@ export function AddRecurringExpenseDialog() {
                                 label='Start Date'
                                 trigger='onConfirm'
                                 onClick={() => setStartDatePickerVisible(true)}
+                                arrow={false}
                             >
                                 <DatePicker
                                     visible={startDatePickerVisible}
                                     onClose={() => setStartDatePickerVisible(false)}
+                                    confirmText="OK"
+                                    cancelText="Cancel"
                                 >
                                     {value => (
                                         <div className='form-picker-trigger'>
@@ -240,10 +252,13 @@ export function AddRecurringExpenseDialog() {
                                 label='End Date (Optional)'
                                 trigger='onConfirm'
                                 onClick={() => setEndDatePickerVisible(true)}
+                                arrow={false}
                             >
                                 <DatePicker
                                     visible={endDatePickerVisible}
                                     onClose={() => setEndDatePickerVisible(false)}
+                                    confirmText="OK"
+                                    cancelText="Cancel"
                                 >
                                     {value => (
                                         <div className='form-picker-trigger'>
