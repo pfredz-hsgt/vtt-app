@@ -11,8 +11,8 @@ import {
     DatePicker,
     TextArea,
     NavBar,
-    Toast
 } from 'antd-mobile'
+import { toast } from 'sonner'
 import { DownOutline, CloseOutline } from 'antd-mobile-icons'
 import { ExpenseGroup, RecurringFrequency } from '@/types'
 import { getCategories } from '@/lib/expense-categories'
@@ -59,15 +59,9 @@ export function AddRecurringExpenseDialog() {
 
         const result = await addRecurringExpense(formData)
         if (result?.error) {
-            Toast.show({
-                icon: 'fail',
-                content: result.error,
-            })
+            toast.error(result.error)
         } else {
-            Toast.show({
-                icon: 'success',
-                content: 'Recurring expense added!',
-            })
+            toast.success('Recurring expense added!')
             setOpen(false)
             form.resetFields()
             router.refresh()

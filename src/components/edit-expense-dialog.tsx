@@ -9,10 +9,10 @@ import {
     Picker,
     DatePicker,
     TextArea,
-    Toast,
     Dialog,
     NavBar
 } from 'antd-mobile'
+import { toast } from 'sonner'
 import { DownOutline, CloseOutline } from 'antd-mobile-icons'
 import { Trash2 } from 'lucide-react'
 import { updateExpense, deleteExpense } from '@/app/(main)/actions'
@@ -67,9 +67,9 @@ export function EditExpenseDialog({ expense, open, onOpenChange }: EditExpenseDi
 
         const result = await updateExpense(expense.id, formData)
         if (result?.error) {
-            Toast.show({ icon: 'fail', content: result.error })
+            toast.error(result.error)
         } else {
-            Toast.show({ icon: 'success', content: 'Saved!' })
+            toast.success('Saved!')
             onOpenChange(false)
             router.refresh()
         }
@@ -78,16 +78,14 @@ export function EditExpenseDialog({ expense, open, onOpenChange }: EditExpenseDi
     const handleDelete = async () => {
         if (!expense) return
 
-        const result = await Dialog.confirm({
-            content: 'Are you sure you want to delete this expense?',
-        })
+        const result = window.confirm('Are you sure you want to delete this expense?')
 
         if (result) {
             const res = await deleteExpense(expense.id)
             if (res?.error) {
-                Toast.show({ icon: 'fail', content: res.error })
+                toast.error(res.error)
             } else {
-                Toast.show({ icon: 'success', content: 'Deleted' })
+                toast.success('Deleted')
                 onOpenChange(false)
                 router.refresh()
             }

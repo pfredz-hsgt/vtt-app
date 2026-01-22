@@ -41,10 +41,10 @@ export function Sidebar() {
             {/* Sidebar */}
             <aside
                 className={cn(
-                    'fixed top-14 sm:top-16 bottom-0 left-0 z-50 bg-background border-r transition-transform duration-300',
-                    'w-64',
-                    isMobile && 'shadow-lg',
-                    !isMobile && 'md:translate-x-0'
+                    'bg-background border-r w-64 transition-transform duration-300 z-50',
+                    isMobile
+                        ? 'fixed top-14 sm:top-16 bottom-0 left-0 shadow-lg'
+                        : 'sticky top-14 sm:top-16 h-[calc(100vh-3.5rem)] sm:h-[calc(100vh-4rem)]'
                 )}
             >
                 <div className="flex flex-col h-full">

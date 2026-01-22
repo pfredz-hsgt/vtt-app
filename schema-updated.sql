@@ -4,25 +4,54 @@
 -- VTT Core (Existing)
 -- ==========================================
 
--- Create a table for vehicle expenses
+-- Create a table for expenses
 create table if not exists expenses (
   id uuid default gen_random_uuid() primary key,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null,
-  user_id uuid references auth.users not null,
-  type text check (type in ('Refuel', 'Service', 'Wash', 'Repair', 'Other')) not null,
-  odometer integer not null,
+  expense_group text default 'vehicle',
+  type text not null,
+  odometer integer,
   cost decimal(10, 2) not null,
   notes text
+  -- user_id removed as auth is disabled
 );
 
 -- Enable Row Level Security (RLS)
 alter table expenses enable row level security;
 
--- Policies for expenses
-create policy "Users can view their own expenses" on expenses for select using (auth.uid() = user_id);
-create policy "Users can insert their own expenses" on expenses for insert with check (auth.uid() = user_id);
-create policy "Users can update their own expenses" on expenses for update using (auth.uid() = user_id);
-create policy "Users can delete their own expenses" on expenses for delete using (auth.uid() = user_id);
+-- Policies for expenses (Public Access)
+create policy "Public full access to expenses" on expenses
+  for all to public
+  using (true)
+  with check (true);
+
+
+-- Create a table for recurring expenses
+create table if not exists recurring_expenses (
+  id uuid default gen_random_uuid() primary key,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  name text not null,
+  amount decimal(10, 2) not null,
+  expense_group text default 'personal',
+  type text not null,
+  frequency text not null, -- 'monthly', 'weekly', 'yearly'
+  day_of_month integer,
+  day_of_week integer,
+  start_date date not null,
+  end_date date,
+  next_occurrence_date date,
+  notes text,
+  is_active boolean default true
+);
+
+-- Enable Row Level Security (RLS)
+alter table recurring_expenses enable row level security;
+
+-- Policies for recurring_expenses (Public Access)
+create policy "Public full access to recurring_expenses" on recurring_expenses
+  for all to public
+  using (true)
+  with check (true);
 
 
 -- ==========================================

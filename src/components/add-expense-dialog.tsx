@@ -9,9 +9,9 @@ import {
     Picker,
     DatePicker,
     TextArea,
-    Toast,
     NavBar
 } from 'antd-mobile'
+import { toast } from 'sonner'
 import { DownOutline, CloseOutline } from 'antd-mobile-icons'
 import { Plus } from 'lucide-react'
 import { addExpense } from '@/app/(main)/actions'
@@ -57,15 +57,9 @@ export function AddExpenseDialog({ open: controlledOpen, onOpenChange, defaultGr
 
         const result = await addExpense(formData)
         if (result?.error) {
-            Toast.show({
-                icon: 'fail',
-                content: result.error,
-            })
+            toast.error(result.error)
         } else {
-            Toast.show({
-                icon: 'success',
-                content: 'Expense added!',
-            })
+            toast.success('Expense added!')
             setOpen(false)
             form.resetFields()
         }
