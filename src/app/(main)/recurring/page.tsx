@@ -1,15 +1,9 @@
 import { createClient } from '@/utils/supabase/server'
-import { redirect } from 'next/navigation'
 import { RecurringExpenseList } from '@/components/recurring-expense-list'
 import { AddRecurringExpenseDialog } from '@/components/add-recurring-expense-dialog'
 
 export default async function RecurringPage() {
     const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-
-    if (!user) {
-        redirect('/login')
-    }
 
     const { data: recurringExpenses } = await supabase
         .from('recurring_expenses')

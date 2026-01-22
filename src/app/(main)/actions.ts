@@ -6,18 +6,11 @@ import { createClient } from '@/utils/supabase/server'
 export async function addExpense(formData: FormData) {
     const supabase = await createClient()
 
-    const { data: { user } } = await supabase.auth.getUser()
-
-    if (!user) {
-        return { error: 'Unauthorized' }
-    }
-
     const expenseDate = formData.get('expense_date') as string
     const expenseGroup = formData.get('expense_group') as string
     const odometerValue = formData.get('odometer') as string
 
     const data = {
-        user_id: user.id,
         expense_group: expenseGroup || 'vehicle',
         type: formData.get('type') as string,
         odometer: odometerValue ? parseInt(odometerValue) : null,
@@ -41,18 +34,10 @@ export async function addExpense(formData: FormData) {
 export async function deleteExpense(expenseId: string) {
     const supabase = await createClient()
 
-    const { data: { user } } = await supabase.auth.getUser()
-
-    if (!user) {
-        return { error: 'Unauthorized' }
-    }
-
-    // Verify the expense belongs to the user before deleting
     const { error } = await supabase
         .from('expenses')
         .delete()
         .eq('id', expenseId)
-        .eq('user_id', user.id)
 
     if (error) {
         return { error: error.message }
@@ -65,12 +50,6 @@ export async function deleteExpense(expenseId: string) {
 export async function updateExpense(expenseId: string, formData: FormData) {
     const supabase = await createClient()
 
-    const { data: { user } } = await supabase.auth.getUser()
-
-    if (!user) {
-        return { error: 'Unauthorized' }
-    }
-
     const expenseDate = formData.get('expense_date') as string
     const odometerValue = formData.get('odometer') as string
 
@@ -82,12 +61,10 @@ export async function updateExpense(expenseId: string, formData: FormData) {
         ...(expenseDate && { created_at: expenseDate }),
     }
 
-    // Verify the expense belongs to the user before updating
     const { error } = await supabase
         .from('expenses')
         .update(data)
         .eq('id', expenseId)
-        .eq('user_id', user.id)
 
     if (error) {
         return { error: error.message }
@@ -101,12 +78,6 @@ export async function updateExpense(expenseId: string, formData: FormData) {
 
 export async function addRecurringExpense(formData: FormData) {
     const supabase = await createClient()
-
-    const { data: { user } } = await supabase.auth.getUser()
-
-    if (!user) {
-        return { error: 'Unauthorized' }
-    }
 
     const expenseGroup = formData.get('expense_group') as string
     const frequency = formData.get('frequency') as string
@@ -125,7 +96,6 @@ export async function addRecurringExpense(formData: FormData) {
     }
 
     const data = {
-        user_id: user.id,
         name: formData.get('name') as string,
         amount: parseFloat(formData.get('amount') as string),
         expense_group: expenseGroup || 'personal',

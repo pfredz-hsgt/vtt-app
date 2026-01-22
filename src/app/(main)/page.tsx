@@ -9,7 +9,6 @@ import { Card, Grid, AutoCenter, Button, Space, List, Tag } from 'antd-mobile'
 import { Car, Wallet, TrendingUp, ChevronRight } from 'lucide-react'
 
 export default function Home() {
-  const [user, setUser] = useState<any>(null)
   const [allExpenses, setAllExpenses] = useState<any[]>([])
   const [vehicleExpenses, setVehicleExpenses] = useState<any[]>([])
   const [personalExpenses, setPersonalExpenses] = useState<any[]>([])
@@ -18,16 +17,7 @@ export default function Home() {
   const supabase = createClient()
 
   useEffect(() => {
-    const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) {
-        router.push('/login')
-        return
-      }
-      setUser(user)
-      fetchExpenses()
-    }
-    getUser()
+    fetchExpenses()
   }, [])
 
   const fetchExpenses = async () => {

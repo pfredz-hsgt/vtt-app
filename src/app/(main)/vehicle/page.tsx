@@ -1,5 +1,4 @@
 import { createClient } from '@/utils/supabase/server'
-import { redirect } from 'next/navigation'
 import { ExpenseList } from '@/components/expense-list'
 import { AddExpenseDialog } from '@/components/add-expense-dialog'
 import { FloatingAddButton } from '@/components/floating-add-button'
@@ -11,11 +10,6 @@ export default async function VehiclePage({
     searchParams: Promise<{ type?: string; from?: string; to?: string }>
 }) {
     const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-
-    if (!user) {
-        redirect('/login')
-    }
 
     const { type, from, to } = await searchParams
 
